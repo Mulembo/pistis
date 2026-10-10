@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$db   = 'rfck_db';
-$user = 'root';
-$pass = '';
+$db   = 'u777057435_cct_db';
+$user = 'u777057435_pistis';
+$pass = 'Pis2812198@';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
