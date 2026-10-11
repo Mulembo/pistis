@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vérification - Contrôle Signature</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background-color: #ffffff; color: #333333; padding-top: 75px; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
+
+    /* 1. EN-TÊTE FIXE (HEADER) */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 65px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 1000;
+    }
+
+    /* IMAGE LOGO */
+    .logo-img {
+      height: 45px;
+      width: auto;
+      max-width: 180px;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* BOUTON MENU SANS CONTOUR (CONTOUR SEULEMENT AU CLIC) */
+    .menu-btn {
+      background: transparent;
+      border: 1px solid transparent; /* Pas de contour au repos */
+      border-radius: 6px;
+      font-size: 22px;
+      cursor: pointer;
+      color: #0f172a;
+      padding: 6px 10px;
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    /* Apparition du contour uniquement au clic / focus */
+    .menu-btn:focus, 
+    .menu-btn:active, 
+    .menu-btn.open {
+      border: 1px solid #0f172a;
+      background-color: #f8fafc;
+    }
+
+    /* MENU DÉROULANT */
+    .dropdown-menu {
+      display: none;
+      position: fixed;
+      top: 65px;
+      left: 0;
+      width: 100%;
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      z-index: 999;
+      padding: 10px 15px;
+    }
+    .dropdown-menu.show { display: block; }
+    
+    .nav-item {
+      display: block;
+      width: 100%;
+      padding: 12px 15px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 13px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .nav-item.active {
+      background-color: #1a9fff;
+      color: #ffffff;
+    }
+    .nav-item.link {
+      background-color: transparent;
+      color: #475569;
+    }
+
+    /* CONTENEUR PRINCIPAL */
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 10px 15px;
+      flex: 1;
+    }
+
+    /* SECTION 1: VÉRIFICATION SIGNATURE NUMÉRIQUE (HAUT) */
+    .info-section {
+      text-align: center;
+      margin-bottom: 25px;
+      padding: 0 5px;
+    }
+
+    .info-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 15px;
+      line-height: 1.3;
+    }
+
+    .info-text {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .upload-card {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      padding: 25px 20px;
+      margin-bottom: 35px;
+      border: 1px solid #f1f5f9;
+    }
+
+    .file-input-group {
+      display: flex;
+      margin-bottom: 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .file-input-group input[type="text"] {
+      flex: 1;
+      border: none;
+      padding: 10px 12px;
+      background: #f8fafc;
+      font-size: 13px;
+      color: #64748b;
+      outline: none;
+    }
+
+    .btn-choose {
+      background: #1a9fff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .captcha-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .captcha-code {
+      background: #f1f5f9;
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-style: italic;
+      font-weight: bold;
+      font-size: 15px;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .captcha-input {
+      flex: 1;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .btn-blue {
+      width: 100%;
+      background: #1a9fff;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* SECTION 2: BLOC RÉSULTAT DU SCAN (DEUXIÈME POSITION) */
+    .result-card {
+      background: #f4fbf7;
+      border: 2px solid #22c55e;
+      border-radius: 16px;
+      padding: 25px 20px;
+      margin-bottom: 35px;
+      display: none; /* Affiché dynamiquement lors du scan */
+    }
+
+    .status-title {
+      color: #16a34a;
+      font-size: 19px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+    }
+
+    .doc-table tr {
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .doc-table tr:last-child { border-bottom: none; }
+
+    .doc-table td {
+      padding: 12px 0;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    .doc-table td.label {
+      font-weight: 700;
+      color: #16a34a;
+      width: 50%;
+      line-height: 1.4;
+    }
+
+    .doc-table td.value {
+      color: #16a34a;
+      text-align: left;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    .separator-bar {
+      height: 4px;
+      background: #cbd5e1;
+      width: 70%;
+      margin: 0 auto 25px auto;
+      border-radius: 2px;
+    }
+
+    .btn-green {
+      display: block;
+      width: 80%;
+      margin: 0 auto;
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    /* SECTION 3: CONTACT (TROISIÈME POSITION) */
+    .contact-section {
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+
+    .contact-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 20px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    textarea.form-control {
+      height: 110px;
+      resize: vertical;
+    }
+
+    .contact-btn-wrapper {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* SECTION 4: PIED DE PAGE (FOOTER) */
+    footer {
+      background-color: #1e2530;
+      color: #94a3b8;
+      text-align: center;
+      padding: 20px 15px;
+      font-size: 13px;
+      margin-top: 30px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- EN-TÊTE FIXE AVEC IMAGE LOGO -->
+  <header>
+    <a href="#top" style="text-decoration: none;">
+      <img src="logo.jpeg" alt="Logo" class="logo-img">
+    </a>
+    <button class="menu-btn" id="menuBtn" onclick="toggleMenu()"><i class="fa-solid fa-bars"></i></button>
+  </header>
+
+  <!-- MENU DÉROULANT -->
+  <div class="dropdown-menu" id="dropdownMenu">
+    <a href="#top" class="nav-item active" onclick="closeMenu()">ACCUEIL</a>
+    <a href="#contact" class="nav-item link" onclick="closeMenu()">CONTACT</a>
+  </div>
+
+  <div class="container" id="top">
+
+    <!-- 1. SECTION VÉRIFICATION SIGNATURE NUMÉRIQUE (EN PREMIER) -->
+    <div class="info-section">
+      <h1 class="info-title">Vérification signature numérique</h1>
+      <p class="info-text">
+        Bienvenue sur le site web de vérification de la signature du document numérique PDF. Vous pouvez effectuer la vérification de signature numérique par un lecteur PDF générique, sur notre site web ou par une application mobile téléchargé depuis votre smartphone.
+      </p>
+    </div>
+
+    <div class="upload-card">
+      <h2 class="info-title" style="font-size: 18px; margin-bottom: 20px;">Vérification signature numérique</h2>
+      
+      <div class="file-input-group">
+        <input type="text" placeholder="Choisir le fichier" readonly>
+        <button class="btn-choose"><i class="fa-solid fa-file-pdf"></i> Choisir</button>
+      </div>
+
+      <div class="captcha-group">
+        <div class="captcha-code">
+          <i class="fa-solid fa-arrows-rotate" style="cursor:pointer;" onclick="generateCaptcha()"></i>
+          <span id="captchaText">jwrcng</span>
+        </div>
+        <input type="text" class="captcha-input" placeholder="Tapez ces cara">
+      </div>
+
+      <button class="btn-blue">✔ Vérifier</button>
+    </div>
+
+    <!-- 2. BLOC RÉSULTAT LE DOCUMENT EST AUTHENTIQUE (EN DEUXIÈME) -->
+    <div class="result-card" id="resultCard">
+      <div class="status-title">
+        <i class="fa-solid fa-circle-check"></i> Le document est authentique
+      </div>
+
+      <table class="doc-table">
+        <tr>
+          <td class="label">Autorité</td>
+          <td class="value" id="resAutorite">Certificat responsabilité automobile</td>
+        </tr>
+        <tr>
+          <td class="label">Numéro d'immatriculation</td>
+          <td class="value" id="resImmat">-</td>
+        </tr>
+        <tr>
+          <td class="label">Numéro de châssis</td>
+          <td class="value" id="resChassis">-</td>
+        </tr>
+        <tr>
+          <td class="label">Véhicule avec remorque</td>
+          <td class="value" id="resRemorque">Non</td>
+        </tr>
+        <tr>
+          <td class="label">Nombre de places</td>
+          <td class="value" id="resPlaces">2</td>
+        </tr>
+        <tr>
+          <td class="label">Date effet</td>
+          <td class="value" id="resEffet">-</td>
+        </tr>
+        <tr>
+          <td class="label">Date échéance</td>
+          <td class="value" id="resEcheance">-</td>
+        </tr>
+      </table>
+
+      <div class="separator-bar"></div>
+
+      <button class="btn-green" onclick="window.location.reload()">
+        ✔ Nouvelle vérification
+      </button>
+    </div>
+
+    <!-- 3. SECTION CONTACT (EN TROISIÈME) -->
+    <div class="contact-section" id="contact">
+      <h2 class="contact-title">Envoie-nous un message!</h2>
+      <form onsubmit="event.preventDefault(); alert('Message envoyé avec succès !');">
+        <input type="email" class="form-control" placeholder="Votre adresse e-mail*..." required>
+        <input type="text" class="form-control" placeholder="Votre sujet...">
+        <textarea class="form-control" placeholder="Votre message*..." required></textarea>
+        <div class="contact-btn-wrapper">
+          <button type="submit" class="btn-blue" style="width: auto; padding: 12px 24px;">Envoyer le message</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- 4. PIED DE PAGE (FOOTER) -->
+  <footer>
+    2020 - 2026 © Contrôle signature.
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('dropdownMenu');
+      const btn = document.getElementById('menuBtn');
+      menu.classList.toggle('show');
+      btn.classList.toggle('open');
+    }
+
+    function closeMenu() {
+      const menu = document.getElementById('dropdownMenu');
+      const btn = document.getElementById('menuBtn');
+      menu.classList.remove('show');
+      btn.classList.remove('open');
+    }
+
+    function generateCaptcha() {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      document.getElementById('captchaText').innerText = result;
+    }
+
+    async function initVerification() {
+      const token = new URLSearchParams(window.location.search).get('token');
+      if(!token) return;
+
+      try {
+        const res = await fetch(`api.php?action=verify&token=${token}`);
+        const data = await res.json();
+
+        if(data.success) {
+          const d = data.doc;
+          document.getElementById('resAutorite').innerText = d.autorite || 'Certificat responsabilité automobile';
+          document.getElementById('resImmat').innerText = d.immatriculation;
+          document.getElementById('resChassis').innerText = d.chassis;
+          document.getElementById('resRemorque').innerText = d.remorque;
+          document.getElementById('resPlaces').innerText = d.nombre_places;
+          document.getElementById('resEffet').innerText = d.date_effet;
+          document.getElementById('resEcheance').innerText = d.date_echeance;
+
+          // Afficher la carte verte de vérification
+          document.getElementById('resultCard').style.display = 'block';
+        } else {
+          alert("Document non reconnu ou invalide.");
+        }
+      } catch(e) {
+        console.error("Erreur serveur:", e);
+      }
+    }
+
+    initVerification();
+  </script>
+</body>
+</html>
