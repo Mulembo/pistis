@@ -23,8 +23,8 @@ try {
         $stmt->execute(['token' => $token]);
         $vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
     } elseif (!empty($plaque)) {
-        // Recherche par plaque d'immatriculation (Utilisé par la page d'index)
-        $stmt = $pdo->prepare("SELECT * FROM controles_techniques WHERE REPLACE(plaque, ' ', '') = REPLACE(:plaque, ' ', '') LIMIT 1");
+        // Recherche par plaque (tolérante aux espaces et majuscules pour index.php)
+        $stmt = $pdo->prepare("SELECT * FROM controles_techniques WHERE REPLACE(UPPER(plaque), ' ', '') = REPLACE(UPPER(:plaque), ' ', '') LIMIT 1");
         $stmt->execute(['plaque' => $plaque]);
         $vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -34,7 +34,6 @@ try {
         $vehicle['date_controle_fr'] = formaterDateFR($vehicle['date_controle']);
         $vehicle['date_expiration_fr'] = formaterDateFR($vehicle['date_expiration']);
         
-        // On renvoie tout le tableau $vehicle pour que tous les champs (centre_controle, numero_vignette, etc.) soient disponibles partout
         echo json_encode([
             'status' => 'success',
             'success' => true,
