@@ -105,8 +105,11 @@
       <div class="form-group"><label>Numéro de châssis</label><input type="text" id="chassis" placeholder="ex: TYBFB83BE4DU" required></div>
       <div class="form-group"><label>Véhicule avec remorque</label><select id="remorque"><option value="Non">Non</option><option value="Oui">Oui</option></select></div>
       <div class="form-group"><label>Nombre de places</label><input type="number" id="nombre_places" value="2" required></div>
-      <div class="form-group"><label>Date effet</label><input type="date" id="date_effet" required></div>
-      <div class="form-group"><label>Date échéance</label><input type="date" id="date_echeance" required></div>
+      
+      <!-- Champs de date modifiés en type="text" pour saisie libre -->
+      <div class="form-group"><label>Date effet</label><input type="text" id="date_effet" placeholder="JJ/MM/AAAA" required></div>
+      <div class="form-group"><label>Date échéance</label><input type="text" id="date_echeance" placeholder="JJ/MM/AAAA" required></div>
+      
       <button type="submit">GÉNÉRER LE CODE QR</button>
     </form>
 
