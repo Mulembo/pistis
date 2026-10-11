@@ -10,10 +10,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-$host = '127.0.0.1';
-$db   = 'docverif_db';
-$user = 'root';
-$pass = ''; // Mot de passe vide par défaut sur XAMPP
+$host = 'localhost';
+$db   = 'u777057435_sona';
+$user = 'u777057435_mulembo';
+$pass = 'Mrright28121998@'; // Mot de passe vide par défaut sur XAMPP
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
