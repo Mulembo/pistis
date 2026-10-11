@@ -38,7 +38,7 @@
     /* BOUTON MENU SANS CONTOUR (CONTOUR SEULEMENT AU CLIC) */
     .menu-btn {
       background: transparent;
-      border: 1px solid transparent; /* Pas de contour au repos */
+      border: 1px solid transparent;
       border-radius: 6px;
       font-size: 22px;
       cursor: pointer;
@@ -48,7 +48,6 @@
       transition: border-color 0.2s, background-color 0.2s;
     }
 
-    /* Apparition du contour uniquement au clic / focus */
     .menu-btn:focus, 
     .menu-btn:active, 
     .menu-btn.open {
@@ -200,14 +199,14 @@
       cursor: pointer;
     }
 
-    /* SECTION 2: BLOC RÉSULTAT DU SCAN (DEUXIÈME POSITION) */
+    /* SECTION 2: BLOC RÉSULTAT DU SCAN */
     .result-card {
       background: #f4fbf7;
       border: 2px solid #22c55e;
       border-radius: 16px;
       padding: 25px 20px;
       margin-bottom: 35px;
-      display: none; /* Affiché dynamiquement lors du scan */
+      display: none;
     }
 
     .status-title {
@@ -276,7 +275,7 @@
       text-align: center;
     }
 
-    /* SECTION 3: CONTACT (TROISIÈME POSITION) */
+    /* SECTION 3: CONTACT */
     .contact-section {
       margin-top: 20px;
       margin-bottom: 30px;
@@ -309,7 +308,7 @@
       justify-content: flex-end;
     }
 
-    /* SECTION 4: PIED DE PAGE (FOOTER) */
+    /* SECTION 4: PIED DE PAGE */
     footer {
       background-color: #1e2530;
       color: #94a3b8;
@@ -323,7 +322,7 @@
 </head>
 <body>
 
-  <!-- EN-TÊTE FIXE AVEC IMAGE LOGO -->
+  <!-- EN-TÊTE FIXE -->
   <header>
     <a href="#top" style="text-decoration: none;">
       <img src="logo.jpeg" alt="Logo" class="logo-img">
@@ -339,11 +338,11 @@
 
   <div class="container" id="top">
 
-    <!-- 1. SECTION VÉRIFICATION SIGNATURE NUMÉRIQUE (EN PREMIER) -->
+    <!-- 1. SECTION VÉRIFICATION -->
     <div class="info-section">
       <h1 class="info-title">Vérification signature numérique</h1>
       <p class="info-text">
-        Bienvenue sur le site web de vérification de la signature du document numérique PDF. Vous pouvez effectuer la vérification de signature numérique par un lecteur PDF générique, sur notre site web ou par une application mobile téléchargé depuis votre smartphone.
+        Bienvenue sur le site web de vérification de la signature du document numérique PDF. Vous pouvez effectuer la vérification de signature numérique par un lecteur PDF générique, sur notre site web ou par une application mobile téléchargée depuis votre smartphone.
       </p>
     </div>
 
@@ -366,7 +365,7 @@
       <button class="btn-blue">✔ Vérifier</button>
     </div>
 
-    <!-- 2. BLOC RÉSULTAT LE DOCUMENT EST AUTHENTIQUE (EN DEUXIÈME) -->
+    <!-- 2. BLOC RÉSULTAT -->
     <div class="result-card" id="resultCard">
       <div class="status-title">
         <i class="fa-solid fa-circle-check"></i> Le document est authentique
@@ -410,7 +409,7 @@
       </button>
     </div>
 
-    <!-- 3. SECTION CONTACT (EN TROISIÈME) -->
+    <!-- 3. SECTION CONTACT -->
     <div class="contact-section" id="contact">
       <h2 class="contact-title">Envoie-nous un message!</h2>
       <form onsubmit="event.preventDefault(); alert('Message envoyé avec succès !');">
@@ -425,7 +424,7 @@
 
   </div>
 
-  <!-- 4. PIED DE PAGE (FOOTER) -->
+  <!-- 4. PIED DE PAGE -->
   <footer>
     2020 - 2026 © Contrôle signature.
   </footer>
@@ -454,6 +453,18 @@
       document.getElementById('captchaText').innerText = result;
     }
 
+    // Fonction pour transformer le format AAAA-MM-JJ de la BDD en JJ/MM/AAAA (ou JJ/MM/AA) pour l'affichage
+    function formatDateForDisplay(dateStr) {
+      if (!dateStr) return '-';
+      dateStr = dateStr.trim();
+      // Si la date est au format standard AAAA-MM-JJ (ex: 2026-10-21)
+      const parts = dateStr.split('-');
+      if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`; // Convertit en JJ/MM/AAAA
+      }
+      return dateStr; // Sinon renvoie tel quel
+    }
+
     async function initVerification() {
       const token = new URLSearchParams(window.location.search).get('token');
       if(!token) return;
@@ -469,8 +480,10 @@
           document.getElementById('resChassis').innerText = d.chassis;
           document.getElementById('resRemorque').innerText = d.remorque;
           document.getElementById('resPlaces').innerText = d.nombre_places;
-          document.getElementById('resEffet').innerText = d.date_effet;
-          document.getElementById('resEcheance').innerText = d.date_echeance;
+          
+          // Utilisation de la fonction de formatage pour afficher joliment la date sur le scan
+          document.getElementById('resEffet').innerText = formatDateForDisplay(d.date_effet);
+          document.getElementById('resEcheance').innerText = formatDateForDisplay(d.date_echeance);
 
           // Afficher la carte verte de vérification
           document.getElementById('resultCard').style.display = 'block';
