@@ -351,7 +351,6 @@
       flex-shrink: 0;
     }
 
-    /* SECTION COMMENT EFFECTUER UNE VÉRIFICATION */
     .how-to-card {
       margin-bottom: 24px;
     }
@@ -455,7 +454,6 @@
       line-height: 1.4;
     }
 
-    /* VUE RÉSULTAT DU CONTRÔLE */
     #result-view {
       display: none;
       margin-top: 24px;
@@ -650,7 +648,7 @@
 
   <div class="container">
 
-    <!-- VUE DE RECHERCHE (PERMANENTE EN HAUT) -->
+    <!-- VUE DE RECHERCHE -->
     <div id="search-view">
       
       <div class="hero-section">
@@ -711,7 +709,7 @@
             <div class="badge-rdc-wrapper">
               <div class="badge-rdc-box">RDC</div>
             </div>
-            <input type="text" id="plaque-input" class="input-field" placeholder="0000AJ01" value="5409BG01" required>
+            <input type="text" id="plaque-input" class="input-field" placeholder="0000AJ01" required>
           </div>
 
           <button type="submit" class="btn-submit" id="btn-submit">
@@ -775,7 +773,6 @@
         </div>
       </div>
 
-      <!-- CARTE : COMMENT EFFECTUER UNE VÉRIFICATION ? -->
       <div class="card how-to-card">
         <div class="how-to-title-wrapper">
           <span class="red-bar-accent"></span>
@@ -809,7 +806,6 @@
         </div>
       </div>
 
-      <!-- CARTE D'ERREUR DYNAMIQUE -->
       <div id="error-card" class="custom-error-card">
         <div class="custom-error-inner">
           <div class="error-icon-circle">!</div>
@@ -822,7 +818,7 @@
 
     </div>
 
-    <!-- VUE RÉSULTAT (AFFICHER TOUT EN BAS) -->
+    <!-- VUE RÉSULTAT -->
     <div id="result-view">
       <div class="result-card">
         <div class="result-header">
