@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code_activation'])) {
                 $txt_duree = "1 semaine";
             } else {
                 $m = intval($duree_val);
-                if ($m < 1) $m = 1;
+                if ($m < 1)$m = 1;
                 $newExp = date('Y-m-d', strtotime("{$baseDate} +{$m} month"));
                 $txt_duree = "$m mois";
             }
@@ -99,11 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plaque'])) {
         } else {
             $token = !empty($token_existant) ? $token_existant : (($existing && !empty($existing['token'])) ?$existing['token'] : bin2hex(random_bytes(16)));
 
-            // Enregistrement avec double écriture pour compatibilité totale (centre_controle / centre et numero_vignette / vignette_no)
+            // CORRECTION ICI : Paramètres uniques pour éviter l'erreur HY093
             $stmt =$pdo->prepare("
                 INSERT INTO controles_techniques 
                 (plaque, proprietaire, marque, modele, centre_controle, centre, date_controle, date_expiration, numero_vignette, vignette_no, token)
-                VALUES (:p, :prop, :m, :mod, :c, :c, :dc, :de, :v, :v, :t)
+                VALUES (:p, :prop, :m, :mod, :c, :c_double, :dc, :de, :v, :v_double, :t)
                 ON DUPLICATE KEY UPDATE 
                 proprietaire=VALUES(proprietaire), marque=VALUES(marque), modele=VALUES(modele),
                 centre_controle=VALUES(centre_controle), centre=VALUES(centre),
@@ -111,8 +111,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plaque'])) {
                 numero_vignette=VALUES(numero_vignette), vignette_no=VALUES(vignette_no), token=VALUES(token)
             ");
             $stmt->execute([
-                'p' => $plaque, 'prop' =>$proprietaire, 'm' => $marque, 'mod' =>$modele,
-                'c' => $centre, 'dc' => $date_ctrl, 'de' =>$date_exp, 'v' => $vignette, 't' =>$token
+                'p' => $plaque, 
+                'prop' => $proprietaire, 
+                'm' => $marque, 
+                'mod' => $modele,
+                'c' => $centre, 
+                'c_double' => $centre, 
+                'dc' => $date_ctrl, 
+                'de' => $date_exp, 
+                'v' => $vignette, 
+                'v_double' => $vignette, 
+                't' => $token
             ]);
             
             $msg = "Véhicule $plaque enregistré avec succès !";
@@ -324,7 +333,7 @@ $vehicules =$pdo->query("SELECT * FROM controles_techniques ORDER BY id DESC LIM
       </thead>
       <tbody>
         <?php foreach ($vehicules as $v):$protocol = isset($_SERVER['HTTPS']) &&$_SERVER['HTTPS'] === 'on' ? "https" : "http";
-          $host = $_SERVER['HTTP_HOST'];$path = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');$scan_url = "$protocol://$host$path/scan.php?token=" . ($v['token'] ?? '');
+          $host_val = $_SERVER['HTTP_HOST'];$path = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');$scan_url = "$protocol://$host_val$path/scan.php?token=" . ($v['token'] ?? '');
         ?>
         <tr class="clickable-row" onclick="openQrModal('<?= htmlspecialchars($v['plaque']) ?>', '<?=$scan_url ?>')">
           <td><strong><?= htmlspecialchars($v['plaque']) ?></strong></td>
