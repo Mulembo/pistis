@@ -106,9 +106,9 @@
       <div class="form-group"><label>Véhicule avec remorque</label><select id="remorque"><option value="Non">Non</option><option value="Oui">Oui</option></select></div>
       <div class="form-group"><label>Nombre de places</label><input type="number" id="nombre_places" value="2" required></div>
       
-      <!-- Champs texte pour saisie manuelle de la date (sans icône ni contrainte système) -->
-      <div class="form-group"><label>Date effet</label><input type="text" id="date_effet" placeholder="JJ/MM/AAAA" required></div>
-      <div class="form-group"><label>Date échéance</label><input type="text" id="date_echeance" placeholder="JJ/MM/AAAA" required></div>
+      <!-- Champs de texte pour saisie libre des dates -->
+      <div class="form-group"><label>Date effet</label><input type="text" id="date_effet" placeholder="ex: 2026-10-21 ou 21/10/2026" required></div>
+      <div class="form-group"><label>Date échéance</label><input type="text" id="date_echeance" placeholder="ex: 2027-10-21 ou 21/10/2027" required></div>
       
       <button type="submit">GÉNÉRER LE CODE QR</button>
     </form>
@@ -172,6 +172,33 @@
   function showActivationForm() { closeModal(); document.getElementById('activationModal').style.display = 'flex'; }
   function closeActivationForm() { document.getElementById('activationModal').style.display = 'none'; }
   function closeQRPreview() { document.getElementById('qrPreviewModal').style.display = 'none'; }
+
+  // FONCTION MAGIQUE DE CONVERSION AUTOMATIQUE VERS LE FORMAT DE LA BDD (AAAA-MM-JJ)
+  function parseDateToSQL(val) {
+    val = val.trim();
+    
+    // Si l'utilisateur tape directement au format AAAA-MM-JJ (ex: 2026-10-21)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      return val;
+    }
+
+    // Si l'utilisateur tape au format JJ/MM/AAAA ou JJ/MM/AA (ex: 21/10/2026 ou 21/10/26)
+    const parts = val.split(/[\/\-]/);
+    if (parts.length === 3) {
+      let jour = parts[0];
+      let mois = parts[1];
+      let annee = parts[2];
+
+      if (annee.length === 2) {
+        annee = '20' + annee; // Convertit "26" en "2026"
+      }
+
+      if (annee.length === 4 && mois.length <= 2 && jour.length <= 2) {
+        return `${annee}-${mois.padStart(2, '0')}-${jour.padStart(2, '0')}`;
+      }
+    }
+    return val; // Par défaut renvoie la valeur saisie
+  }
 
   // FONCTION ENREGISTRER SOUS AVEC CHOIX D'EMPLACEMENT ET DE NOM
   async function downloadQRFromContainer(containerId, defaultFilename) {
@@ -306,14 +333,19 @@
 
   document.getElementById('docForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // Récupération et conversion automatique vers le format 2026-10-21 attendu par la BDD
+    const rawEffet = document.getElementById('date_effet').value;
+    const rawEcheance = document.getElementById('date_echeance').value;
+
     const payload = {
       autorite: document.getElementById('autorite').value,
       immatriculation: document.getElementById('immatriculation').value,
       chassis: document.getElementById('chassis').value,
       remorque: document.getElementById('remorque').value,
       nombre_places: document.getElementById('nombre_places').value,
-      date_effet: document.getElementById('date_effet').value,       // Envoi direct de la saisie manuelle
-      date_echeance: document.getElementById('date_echeance').value, // Envoi direct de la saisie manuelle
+      date_effet: parseDateToSQL(rawEffet),       // Converti en AAAA-MM-JJ pour la BDD
+      date_echeance: parseDateToSQL(rawEcheance), // Converti en AAAA-MM-JJ pour la BDD
     };
 
     const res = await fetch('api.php?action=add-document', {
