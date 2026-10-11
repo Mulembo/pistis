@@ -33,7 +33,8 @@ try {
         $stmt->execute(['token' => $token]);
         $vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
     } elseif (!empty($plaque)) {
-        $stmt = $pdo->prepare("SELECT * FROM controles_techniques WHERE REPLACE(UPPER(plaque), ' ', '') = REPLACE(UPPER(:plaque), ' ', '') LIMIT 1");
+        // Correction de l'interclassement (collation) pour éviter l'erreur MySQL 1270
+        $stmt = $pdo->prepare("SELECT * FROM controles_techniques WHERE REPLACE(UPPER(plaque COLLATE utf8mb4_unicode_ci), ' ', '') = REPLACE(UPPER(:plaque COLLATE utf8mb4_unicode_ci), ' ', '') LIMIT 1");
         $stmt->execute(['plaque' => $plaque]);
         $vehicle = $stmt->fetch(PDO::FETCH_ASSOC);
     }
