@@ -72,9 +72,9 @@
         localStorage.setItem('daysLeft', data.daysLeft);
 
         if (data.role === 'SUPER_ADMIN') {
-          window.location.href = 'super_admin.html';
+          window.location.href = 'super_admin.php';
         } else {
-          window.location.href = 'index.html';
+          window.location.href = 'index.php';
         }
       } else {
         errorBox.innerText = data.message;
