@@ -106,9 +106,9 @@
       <div class="form-group"><label>Véhicule avec remorque</label><select id="remorque"><option value="Non">Non</option><option value="Oui">Oui</option></select></div>
       <div class="form-group"><label>Nombre de places</label><input type="number" id="nombre_places" value="2" required></div>
       
-      <!-- Champs de date en texte libre avec format indiqué -->
-      <div class="form-group"><label>Date effet</label><input type="text" id="date_effet" placeholder="ex: 2026-10-11 ou 11/10/2026" required></div>
-      <div class="form-group"><label>Date échéance</label><input type="text" id="date_echeance" placeholder="ex: 2027-10-11 ou 11/10/2026" required></div>
+      <!-- Champs texte pour saisie manuelle de la date (sans icône ni contrainte système) -->
+      <div class="form-group"><label>Date effet</label><input type="text" id="date_effet" placeholder="JJ/MM/AAAA" required></div>
+      <div class="form-group"><label>Date échéance</label><input type="text" id="date_echeance" placeholder="JJ/MM/AAAA" required></div>
       
       <button type="submit">GÉNÉRER LE CODE QR</button>
     </form>
@@ -139,7 +139,7 @@
     <table>
       <thead>
         <tr>
-            <th>Immatriculation</th>
+          <th>Immatriculation</th>
           <th>N° Châssis</th>
           <th>Période d'effet</th>
           <th>Actions</th>
@@ -172,24 +172,6 @@
   function showActivationForm() { closeModal(); document.getElementById('activationModal').style.display = 'flex'; }
   function closeActivationForm() { document.getElementById('activationModal').style.display = 'none'; }
   function closeQRPreview() { document.getElementById('qrPreviewModal').style.display = 'none'; }
-
-  // FONCTION POUR NORMALISER LA DATE SI ELLE EST ÉCRITE AU FORMAT JJ/MM/AAAA VERS AAAA-MM-JJ (pour la BDD/Scanner)
-  function formatDateForServer(dateStr) {
-    dateStr = dateStr.trim();
-    // Si l'utilisateur a écrit au format JJ/MM/AAAA ou JJ-MM-AAAA
-    const parts = dateStr.split(/[\/\-]/);
-    if (parts.length === 3) {
-      // Si la première partie a 4 chiffres (ex: 2026-10-11), on laisse tel quel
-      if (parts[0].length === 4) {
-        return dateStr;
-      }
-      // Sinon on suppose que c'est JJ/MM/AAAA et on convertit en AAAA-MM-JJ
-      if (parts[2].length === 4) {
-        return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-      }
-    }
-    return dateStr; // Retourne tel quel si format non reconnu
-  }
 
   // FONCTION ENREGISTRER SOUS AVEC CHOIX D'EMPLACEMENT ET DE NOM
   async function downloadQRFromContainer(containerId, defaultFilename) {
@@ -324,19 +306,14 @@
 
   document.getElementById('docForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // Récupération des valeurs saisies et conversion automatique pour que le scanner/BDD les lise correctement (AAAA-MM-JJ)
-    const rawEffet = document.getElementById('date_effet').value;
-    const rawEcheance = document.getElementById('date_echeance').value;
-
     const payload = {
       autorite: document.getElementById('autorite').value,
       immatriculation: document.getElementById('immatriculation').value,
       chassis: document.getElementById('chassis').value,
       remorque: document.getElementById('remorque').value,
       nombre_places: document.getElementById('nombre_places').value,
-      date_effet: formatDateForServer(rawEffet),
-      date_echeance: formatDateForServer(rawEcheance),
+      date_effet: document.getElementById('date_effet').value,       // Envoi direct de la saisie manuelle
+      date_echeance: document.getElementById('date_echeance').value, // Envoi direct de la saisie manuelle
     };
 
     const res = await fetch('api.php?action=add-document', {
