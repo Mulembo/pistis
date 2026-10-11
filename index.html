@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration - Générateur de QR Code</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f6; padding: 20px; margin: 0; }
+    .container { max-width: 850px; margin: 0 auto; }
+    .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); margin-bottom: 25px; }
+    h2 { color: #0088ff; text-align: center; margin-top: 0; }
+    .form-group { margin-bottom: 12px; }
+    label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #444; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #0088ff; color: white; border: none; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 25px; border-radius: 10px; max-width: 400px; width: 90%; text-align: center; }
+    .btn-ignore { background: #6c757d; width: 48%; }
+    .btn-activate { background: #28a745; width: 48%; }
+    .modal-btns { display: flex; justify-content: space-between; margin-top: 15px; }
+
+    /* Zone de résultat QR Code */
+    .qr-container { background: #f8fafc; border: 1px dashed #0088ff; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: center; }
+    .qr-click-area { cursor: pointer; display: inline-block; transition: transform 0.2s; }
+    .qr-click-area:hover { transform: scale(1.03); }
+    .qr-hint { font-size: 11px; color: #64748b; margin-top: 5px; }
+
+    .btn-download { background: #28a745; color: white; padding: 10px 18px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .btn-download:hover { background: #218838; }
+
+    .qr-link-box { margin-top: 10px; word-break: break-all; background: #fff; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; }
+    .qr-link-box a { color: #0088ff; font-weight: bold; text-decoration: underline; }
+
+    /* Tableau historique */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+    th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+    th { background: #f1f5f9; color: #334155; }
+    .btn-open { background: #0088ff; color: white; padding: 6px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 11px; display: inline-block; }
+    .btn-qr-view { background: #28a745; color: white; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; margin-right: 5px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- POPUP AVERTISSEMENT EXPIRATION -->
+  <div class="modal-overlay" id="expiringModal" style="display: none;">
+    <div class="modal-content">
+      <h3 style="color: #d97706; margin-top:0;">⚠️ Abonnement expire bientôt !</h3>
+      <p>Votre abonnement expire dans <b id="daysLeftText">X</b> jour(s). Pensez à le renouveler.</p>
+      <div class="modal-btns">
+        <button class="btn-ignore" onclick="closeModal()">Ignorer</button>
+        <button class="btn-activate" onclick="showActivationForm()">Activer maintenant</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP ACTIVATION -->
+  <div class="modal-overlay" id="activationModal" style="display: none;">
+    <div class="modal-content">
+      <h3>Entrer la Clé d'Activation</h3>
+      <input type="text" id="popupKeyInput" placeholder="ex: LIC-XXXX-XXXX" style="text-align: center; text-transform: uppercase;">
+      <div class="modal-btns">
+        <button class="btn-ignore" onclick="closeActivationForm()">Annuler</button>
+        <button class="btn-activate" onclick="submitKey()">Valider</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP APERÇU ET TÉLÉCHARGEMENT HISTORIQUE -->
+  <div class="modal-overlay" id="qrPreviewModal" style="display: none;">
+    <div class="modal-content">
+      <h3>QR Code du Document</h3>
+      <p id="previewImmatText" style="font-weight: bold; color: #0088ff; margin: 5px 0;"></p>
+      
+      <div class="qr-click-area" onclick="downloadCurrentQRCode()" title="Cliquer pour enregistrer sous">
+        <div id="modalQrcode" style="display:flex; justify-content:center; margin: 15px 0;"></div>
+      </div>
+      <p class="qr-hint">💡 Cliquez sur le QR Code pour ouvrir l'option Enregistrer sous.</p>
+
+      <button class="btn-download" onclick="downloadCurrentQRCode()" style="width:100%;">
+        <i class="fa-solid fa-download"></i> Enregistrer sous (JPG)
+      </button>
+
+      <button class="btn-ignore" onclick="closeQRPreview()" style="width:100%; margin-top:8px;">Fermer</button>
+    </div>
+  </div>
+
+  <!-- FORMULAIRE DE CRÉATION -->
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+      <span id="userLabel" style="font-weight:bold; font-size:14px; color:#1e293b;"></span>
+      <button onclick="logout()" style="width:auto; padding:5px 12px; background:#dc3545; font-size:12px; margin:0;">Déconnexion</button>
+    </div>
+
+    <h2>Nouveau Document & QR Code</h2>
+
+    <form id="docForm">
+      <div class="form-group"><label>Autorité</label><input type="text" id="autorite" value="Certificat responsabilité automobile" required></div>
+      <div class="form-group"><label>Numéro d'immatriculation</label><input type="text" id="immatriculation" placeholder="ex: 8580BN01" required></div>
+      <div class="form-group"><label>Numéro de châssis</label><input type="text" id="chassis" placeholder="ex: TYBFB83BE4DU" required></div>
+      <div class="form-group"><label>Véhicule avec remorque</label><select id="remorque"><option value="Non">Non</option><option value="Oui">Oui</option></select></div>
+      <div class="form-group"><label>Nombre de places</label><input type="number" id="nombre_places" value="2" required></div>
+      <div class="form-group"><label>Date effet</label><input type="date" id="date_effet" required></div>
+      <div class="form-group"><label>Date échéance</label><input type="date" id="date_echeance" required></div>
+      <button type="submit">GÉNÉRER LE CODE QR</button>
+    </form>
+
+    <!-- ZONES RÉSULTAT ET TELECHARGEMENT -->
+    <div id="qrResult" class="qr-container" style="display:none;">
+      <p style="color:green; font-weight:bold; margin-top:0;">Code QR Généré avec succès !</p>
+      
+      <div class="qr-click-area" onclick="downloadMainQRCode()" title="Cliquer pour enregistrer sous">
+        <div id="qrcode" style="display:flex; justify-content:center; margin: 10px 0;"></div>
+      </div>
+      <p class="qr-hint">💡 Cliquez directement sur l'image du QR Code pour choisir où l'enregistrer.</p>
+
+      <button class="btn-download" onclick="downloadMainQRCode()">
+        <i class="fa-solid fa-download"></i> Enregistrer sous (JPG)
+      </button>
+
+      <p style="font-size:12px; color:#64748b; margin-top:15px; margin-bottom:5px;">Lien direct pour vérifier sur votre ordinateur :</p>
+      <div class="qr-link-box">
+        <a id="directLink" href="#" target="_blank">Ouvrir la vérification</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLEAU HISTORIQUE DES DOCUMENTS -->
+  <div class="card">
+    <h3 style="margin-top:0; color:#1e293b;">Mes Documents & Codes QR Générés</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Immatriculation</th>
+          <th>N° Châssis</th>
+          <th>Période d'effet</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="historyTable">
+        <tr><td colspan="4" style="text-align:center; color:#666;">Chargement des documents...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  const displayName = localStorage.getItem('displayName') || localStorage.getItem('username');
+  let currentActiveUrl = '';
+  let currentActiveImmat = '';
+
+  if(!token) window.location.href = 'login.html';
+
+  document.getElementById('userLabel').innerText = "Compte : " + displayName;
+
+  if(localStorage.getItem('warningExpiringSoon') === 'true') {
+    document.getElementById('daysLeftText').innerText = localStorage.getItem('daysLeft');
+    document.getElementById('expiringModal').style.display = 'flex';
+  }
+
+  function closeModal() { document.getElementById('expiringModal').style.display = 'none'; }
+  function showActivationForm() { closeModal(); document.getElementById('activationModal').style.display = 'flex'; }
+  function closeActivationForm() { document.getElementById('activationModal').style.display = 'none'; }
+  function closeQRPreview() { document.getElementById('qrPreviewModal').style.display = 'none'; }
+
+  // FONCTION ENREGISTRER SOUS AVEC CHOIX D'EMPLACEMENT ET DE NOM
+  async function downloadQRFromContainer(containerId, defaultFilename) {
+    const container = document.getElementById(containerId);
+    const img = container.querySelector('img');
+    const canvas = container.querySelector('canvas');
+
+    let imageSrc = '';
+    if (img && img.src) {
+      imageSrc = img.src;
+    } else if (canvas) {
+      imageSrc = canvas.toDataURL("image/jpeg");
+    }
+
+    if (!imageSrc) {
+      alert("Erreur d'extraction de l'image.");
+      return;
+    }
+
+    try {
+      const fetchRes = await fetch(imageSrc);
+      const blob = await fetchRes.blob();
+
+      // Utilisation de File System Access API si supporté (Chrome/Edge PC/Mac)
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: defaultFilename || 'qrcode.jpg',
+            types: [{
+              description: 'Image JPEG',
+              accept: { 'image/jpeg': ['.jpg', '.jpeg'] },
+            }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return; // L'utilisateur a annulé la sauvegarde
+        }
+      }
+
+      // Méthode de secours pour navigateurs mobiles/Safari
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = defaultFilename || 'qrcode.jpg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      console.error(e);
+      alert("Erreur lors de la sauvegarde de l'image.");
+    }
+  }
+
+  function downloadMainQRCode() {
+    const immat = document.getElementById('immatriculation').value || 'qrcode';
+    downloadQRFromContainer('qrcode', `QRCode_${immat}.jpg`);
+  }
+
+  function downloadCurrentQRCode() {
+    downloadQRFromContainer('modalQrcode', `QRCode_${currentActiveImmat}.jpg`);
+  }
+
+  function viewQRCode(qrUrl, immat) {
+    currentActiveUrl = qrUrl;
+    currentActiveImmat = immat;
+
+    document.getElementById('previewImmatText').innerText = "Immatriculation : " + immat;
+    document.getElementById('modalQrcode').innerHTML = '';
+
+    new QRCode(document.getElementById('modalQrcode'), {
+      text: qrUrl,
+      width: 180,
+      height: 180
+    });
+
+    document.getElementById('qrPreviewModal').style.display = 'flex';
+  }
+
+  async function submitKey() {
+    const key = document.getElementById('popupKeyInput').value;
+    const res = await fetch('api.php?action=activate-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ license_key: key })
+    });
+    const data = await res.json();
+    alert(data.message);
+    if(data.success) {
+      localStorage.setItem('warningExpiringSoon', 'false');
+      window.location.reload();
+    }
+  }
+
+  // Chargement de l'historique des documents créés
+  async function loadMyDocuments() {
+    const tbody = document.getElementById('historyTable');
+    try {
+      const res = await fetch('api.php?action=my-documents', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+
+      if(data.success) {
+        if(!data.documents || data.documents.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">Aucun document créé pour le moment.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.documents.map(d => `
+          <tr>
+            <td><b style="color:#0088ff;">${d.immatriculation}</b></td>
+            <td><code>${d.chassis}</code></td>
+            <td>Du ${d.date_effet} au ${d.date_echeance}</td>
+            <td>
+              <button class="btn-qr-view" onclick="viewQRCode('${d.verify_url}', '${d.immatriculation}')">
+                <i class="fa-solid fa-qrcode"></i> Voir QR Code
+              </button>
+              <a href="${d.verify_url}" target="_blank" class="btn-open">Vérifier</a>
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">${data.message || 'Erreur.'}</td></tr>`;
+      }
+    } catch(err) {
+      console.error(err);
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Erreur de connexion BDD.</td></tr>';
+    }
+  }
+
+  document.getElementById('docForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      autorite: document.getElementById('autorite').value,
+      immatriculation: document.getElementById('immatriculation').value,
+      chassis: document.getElementById('chassis').value,
+      remorque: document.getElementById('remorque').value,
+      nombre_places: document.getElementById('nombre_places').value,
+      date_effet: document.getElementById('date_effet').value,
+      date_echeance: document.getElementById('date_echeance').value,
+    };
+
+    const res = await fetch('api.php?action=add-document', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if(data.isExpired) {
+      alert(data.message);
+      showActivationForm();
+    } else if(data.success) {
+      document.getElementById('qrResult').style.display = 'block';
+      document.getElementById('qrcode').innerHTML = '';
+      
+      new QRCode(document.getElementById('qrcode'), { text: data.qrUrl, width: 170, height: 170 });
+
+      const linkElem = document.getElementById('directLink');
+      linkElem.href = data.qrUrl;
+      linkElem.innerText = data.qrUrl;
+
+      loadMyDocuments();
+    }
+  });
+
+  function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+  loadMyDocuments();
+</script>
+
+</body>
+</html>
