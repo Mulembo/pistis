@@ -625,7 +625,6 @@
 </head>
 <body>
 
-  <!-- En-tête Logos -->
   <header>
     <div class="header-inner">
       <div class="logo-group">
@@ -648,7 +647,6 @@
 
   <div class="container">
 
-    <!-- VUE DE RECHERCHE -->
     <div id="search-view">
       
       <div class="hero-section">
@@ -818,7 +816,6 @@
 
     </div>
 
-    <!-- VUE RÉSULTAT -->
     <div id="result-view">
       <div class="result-card">
         <div class="result-header">
@@ -942,7 +939,7 @@
       fetch(`api.php?plaque=${encodeURIComponent(plaqueValue)}`)
         .then(response => {
           if (!response.ok) {
-            throw new Error('network_error');
+            throw new Error('Erreur HTTP ' + response.status + ' : Le fichier api.php est introuvable.');
           }
           return response.json();
         })
@@ -973,10 +970,13 @@
             resultView.scrollIntoView({ behavior: 'smooth', block: 'start' });
           } else {
             resultView.style.display = 'none';
-            if (data.error_type === 'db_error') {
-              showError("Erreur de connexion", "Impossible d'établir la communication avec la base de données.");
+
+            if (data.error_type === 'db_connection_error') {
+              showError("Erreur de connexion DB", data.message);
+            } else if (data.error_type === 'sql_query_error') {
+              showError("Erreur de requête SQL", data.message);
             } else {
-              showError("Vérification impossible", "Véhicule non enregistré dans le système RFCK.");
+              showError("Plaque non trouvée", data.message);
             }
           }
         })
@@ -991,7 +991,7 @@
             <span style="margin-left: 4px;">→</span>`;
             
           resultView.style.display = 'none';
-          showError("Erreur de connexion", "Impossible d'établir la communication avec le serveur.");
+          showError("Erreur de communication", err.message);
         });
     });
 
