@@ -21,7 +21,7 @@
   <meta property="og:image:height" content="630" />
 
   <!-- L'adresse URL de votre site web -->
-  <meta property="og:url" content="https://https://verificationeftkinshasa.site/" />
+  <meta property="og:url" content="https://verificationeftkinshasa.site/" />
 
   <!-- Type de contenu (généralement "website") -->
   <meta property="og:type" content="website" />
