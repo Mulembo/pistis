@@ -9,6 +9,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Titre de votre site qui apparaîtra dans l'aperçu -->
+  <meta property="og:title" content="Vérification véhicule | RFCK" />
+
+  <!-- Courte description du site -->
+  <meta property="og:description" content="Portail officiel de vérification des véhicules - RFCK" />
+
+  <!-- Lien direct vers l'image à afficher (utilisez une URL absolue avec https://) -->
+  <meta property="og:image" content="https://https://verificationeftkinshasa.site/vignette.png" />
+
+  <!-- L'adresse URL de votre site web -->
+  <meta property="og:url" content="https://https://verificationeftkinshasa.site/" />
+
+  <!-- Type de contenu (généralement "website") -->
+  <meta property="og:type" content="website" />
+
   <style>
     :root {
       --primary-blue: #024383;
