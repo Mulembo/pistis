@@ -16,7 +16,7 @@
   <meta property="og:description" content="Portail officiel de vérification des véhicules - RFCK" />
 
   <!-- Lien direct vers l'image à afficher (utilisez une URL absolue avec https://) -->
-  <meta property="og:image" content="https://https://verificationeftkinshasa.site/vignette.png" />
+  <meta property="og:image" content="https://verificationeftkinshasa.site/vignette.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
 
