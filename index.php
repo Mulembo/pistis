@@ -880,7 +880,7 @@
             </div>
             <div>
               <div class="info-row-label">Centre de contrôle</div>
-              <div class="info-row-value" id="res-centre">Centre Agréé RFCK (Ex: Centre Principal)</div>
+              <div class="info-row-value" id="res-centre">-</div>
             </div>
           </div>
 
