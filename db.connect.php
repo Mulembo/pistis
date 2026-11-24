@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $host = 'localhost';
 $db   = 'u777057435_sona';
-$user = 'u777057435_pis';
+$user = 'u777057435_pistis';
 $pass = 'Mrright28121998@'; // Mot de passe vide par défaut sur XAMPP
 $charset = 'utf8mb4';
 
