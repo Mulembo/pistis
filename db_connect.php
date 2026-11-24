@@ -1,7 +1,7 @@
 <?php
 $host = 'localhost';
 $db   = 'u777057435_cct_db';
-$user = 'u777057435_pistis';
+$user = 'u777057435_mulembo';
 $pass = 'Mrright28121998@';
 $charset = 'utf8mb4';
 
